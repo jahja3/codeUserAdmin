@@ -8,6 +8,7 @@ use App\User;
 use App\Role;
 use App\Photo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Session;
 
 use App\Http\Requests;
 
@@ -75,6 +76,8 @@ class AdminUsersController extends Controller
         }
 
         User::create($input);
+
+        Session::flash('created_user', 'The user has been created');
 
         return redirect('/admin/users');
     }
@@ -154,6 +157,27 @@ class AdminUsersController extends Controller
      */
     public function destroy($id)
     {
-        //
+        //this will delete a user but dont delete photo into photo table.
+
+//       $user = User::findOrFail($id);
+//
+//       //This will delete delete image from directory
+//       unlink(public_path() . $user->photo->file);
+//
+//       $user->delete();
+
+        $user = User::findOrFail($id); //this will find user with specific id
+
+        if($user->photo){ //if user have photo
+            $photo = Photo::findOrFail($user->photo->id); //find photo of user which have profile photo
+            unlink(public_path() . $user->photo->file); //then unlink and concatenate with name of user photo
+            $photo->delete(); //then delete it, this will delete user into user table and will delete photo into photo table.
+        }
+
+        $user->delete(); //if user dont have any profile photo this will deleting a user without any photo.
+
+       Session::flash('deleted_user', 'The user has been deleted');
+
+       return  redirect('/admin/users');
     }
 }
